@@ -49,10 +49,25 @@ r_count_A = contextA.get_info(cl.context_info.REFERENCE_COUNT)
 # Program #
 ###########
 
+filename = 'exampleKernelFunction.cl'
+file = open(filename, 'r')
+filestring = "".join(file.readlines())
+program = cl.Program(contextA, filestring).build()
+
+
 ###################
 # Kernel Function #
 ###################
 
+# A kernel function represents a function that should be executed in parallel.
+# The kernel function is build by an OpenCL-program, that can contain multiple kernels.
+
+
 #################
 # Command Queue #
 #################
+
+
+####################
+# Kernel Execution #
+####################
