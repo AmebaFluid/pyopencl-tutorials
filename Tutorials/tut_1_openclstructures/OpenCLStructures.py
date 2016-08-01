@@ -1,4 +1,5 @@
 import pyopencl as cl
+import numpy as np
 
 ## Tutorial 1: OpenCL structures
 # In this part you can learn, how to build up the basic structures that are needed for parallel programming
@@ -38,21 +39,13 @@ for platform in platforms:
 # 1. for specific devices. In this case, create a context for all devices of the first platform:
 contextA = cl.Context(platform_devices[0])
 # 2. for all devices for the first platform of a given type:
-contextB = cl.Context(dev_type=cl.device_type.GPU, properties=[(cl.context_properties.PLATFORM, platforms[0])])
-contextC = cl.Context(dev_type=cl.device_type.CPU, properties=[(cl.context_properties.PLATFORM, platforms[0])])
+try:
+    contextB = cl.Context(dev_type=cl.device_type.GPU, properties=[(cl.context_properties.PLATFORM, platforms[0])])
+except:
+    contextC = cl.Context(dev_type=cl.device_type.CPU, properties=[(cl.context_properties.PLATFORM, platforms[0])])
 
 # OpenCL tracks how often a context structure is accessed. This number is called the reference count.
 r_count_A = contextA.get_info(cl.context_info.REFERENCE_COUNT)
-
-
-###########
-# Program #
-###########
-
-filename = 'exampleKernelFunction.cl'
-file = open(filename, 'r')
-filestring = "".join(file.readlines())
-program = cl.Program(contextA, filestring).build()
 
 
 ###################
@@ -60,7 +53,43 @@ program = cl.Program(contextA, filestring).build()
 ###################
 
 # A kernel function represents a function that should be executed in parallel.
+# For example have a look at this function:
+
+def subtract_offset(vector, offset):
+    shape = vector.shape
+    if len(shape) == 1:
+        result = np.zeros(len(vector))
+        for element in range(0, len(vector)):
+            result[element] = vector[element] - offset
+        return result
+    else:
+        print("The subtract_offset method works only for one-dimensional arrays.")
+
+kernelstringA = """__kernel void exampleKernelFunction(global int* inputdata, global int* outputdata){
+
+     int loopindex = get_global_id(0);
+     int offset = 1;
+     outputdata[loopindex] = inputdata[loopindex] - offset;
+
+}"""
+
+filename = 'exampleKernelFunction.cl'
+file = open(filename, 'r')
+kernelstringB = "".join(file.readlines())
+
+
+###########
+# Program #
+###########
+
 # The kernel function is build by an OpenCL-program, that can contain multiple kernels.
+
+programA = cl.Program(contextA, kernelstringA).build()
+programB = cl.Program(contextA, kernelstringB).build()
+
+# Every time you use program.kernel_name a new kernel object is produced.
+
+
 
 
 #################
@@ -68,6 +97,15 @@ program = cl.Program(contextA, filestring).build()
 #################
 
 
-####################
-# Kernel Execution #
-####################
+#########################
+# Kernel Execution Time #
+#########################
+
+
+###############
+# Simple Test #
+###############
+
+testvector = np.array([1, 2, 3, 4, 5, 6, 7, 8]).astype(np.int32)
+offset = 1
+cpuresult = subtract_offset(testvector, offset)
