@@ -8,6 +8,13 @@ import numpy as np
 # (https://documen.tician.de/pyopencl/) or continue with the next tutorials.
 
 
+#################
+# Tutorial data #
+#################
+testvector = np.array([1, 2, 3, 4, 5, 6, 7, 8]).astype(np.int32)
+outputvector = np.zeros(testvector.shape, dtype=np.int32)
+offset = 1
+
 ############
 # Platform #
 ############
@@ -42,7 +49,7 @@ contextA = cl.Context(platform_devices[0])
 try:
     contextB = cl.Context(dev_type=cl.device_type.GPU, properties=[(cl.context_properties.PLATFORM, platforms[0])])
 except:
-    contextC = cl.Context(dev_type=cl.device_type.CPU, properties=[(cl.context_properties.PLATFORM, platforms[0])])
+    contextB = cl.Context(dev_type=cl.device_type.CPU, properties=[(cl.context_properties.PLATFORM, platforms[0])])
 
 # OpenCL tracks how often a context structure is accessed. This number is called the reference count.
 r_count_A = contextA.get_info(cl.context_info.REFERENCE_COUNT)
@@ -87,25 +94,31 @@ kernelstringB = "".join(file.readlines())
 programA = cl.Program(contextA, kernelstringA).build()
 programB = cl.Program(contextA, kernelstringB).build()
 
-# Every time you use program.kernel_name a new kernel object is produced.
-
-
-
 
 #################
 # Command Queue #
 #################
 
+queueA = cl.CommandQueue(contextA, device=contextA.devices[0])
+
+
+##################
+# Memory Objects #
+##################
+
+inputbuffer = cl.Buffer(contextA, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=testvector)
+outputbuffer = cl.Buffer(contextA, cl.mem_flags.WRITE_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=outputvector)
 
 #########################
 # Kernel Execution Time #
 #########################
 
+# Every time you use program.kernel_name a new kernel object is produced.
+programA.exampleKernelFunction(queueA, testvector.shape, None, inputbuffer, outputbuffer)
+cl.enqueue_read_buffer(queueA, outputbuffer, outputvector).wait()
 
 ###############
 # Simple Test #
 ###############
-
-testvector = np.array([1, 2, 3, 4, 5, 6, 7, 8]).astype(np.int32)
-offset = 1
-cpuresult = subtract_offset(testvector, offset)
+result = subtract_offset(testvector, offset)
+result_opencl = outputvector
