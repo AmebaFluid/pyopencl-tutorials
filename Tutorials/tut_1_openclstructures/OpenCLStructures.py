@@ -99,7 +99,7 @@ programB = cl.Program(contextA, kernelstringB).build()
 # Command Queue #
 #################
 
-queueA = cl.CommandQueue(contextA, device=contextA.devices[0])
+queueA = cl.CommandQueue(contextA, device=contextA.devices[0], properties=cl.command_queue_properties.PROFILING_ENABLE)
 
 
 ##################
@@ -117,8 +117,15 @@ outputbuffer = cl.Buffer(contextA, cl.mem_flags.WRITE_ONLY | cl.mem_flags.COPY_H
 programA.exampleKernelFunction(queueA, testvector.shape, None, inputbuffer, outputbuffer)
 cl.enqueue_read_buffer(queueA, outputbuffer, outputvector).wait()
 
+start = cl.profiling_info.START
+end = cl.profiling_info.END
+
+time = end - start
+
 ###############
 # Simple Test #
 ###############
 result = subtract_offset(testvector, offset)
 result_opencl = outputvector
+
+end = 1
