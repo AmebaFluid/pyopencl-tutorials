@@ -117,6 +117,8 @@ outputbuffer = cl.Buffer(contextA, cl.mem_flags.WRITE_ONLY | cl.mem_flags.COPY_H
 programA.exampleKernelFunction(queueA, testvector.shape, None, inputbuffer, outputbuffer)
 cl.enqueue_read_buffer(queueA, outputbuffer, outputvector).wait()
 
+enqueued = cl.profiling_info.QUEUED
+submit = cl.profiling_info.SUBMIT
 start = cl.profiling_info.START
 end = cl.profiling_info.END
 
@@ -127,5 +129,3 @@ time = end - start
 ###############
 result = subtract_offset(testvector, offset)
 result_opencl = outputvector
-
-end = 1
