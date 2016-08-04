@@ -114,18 +114,20 @@ outputbuffer = cl.Buffer(contextA, cl.mem_flags.WRITE_ONLY | cl.mem_flags.COPY_H
 #########################
 
 # Every time you use program.kernel_name a new kernel object is produced.
-programA.exampleKernelFunction(queueA, testvector.shape, None, inputbuffer, outputbuffer)
-cl.enqueue_read_buffer(queueA, outputbuffer, outputvector).wait()
+event1 = programA.exampleKernelFunction(queueA, testvector.shape, None, inputbuffer, outputbuffer)
+events = [event1]
+cl.enqueue_copy(queueA, outputvector, outputbuffer, wait_for=events)
 
-enqueued = cl.profiling_info.QUEUED
-submit = cl.profiling_info.SUBMIT
-start = cl.profiling_info.START
-end = cl.profiling_info.END
-
-time = end - start
+event1_enqueued = event1.profile.QUEUED
+event1_submitted = event1.profile.SUBMIT
+event1_execution_start = event1.profile.START
+event1_execution_end = event1.profile.END
+event1_execution_time = event1_execution_end - event1_execution_start
 
 ###############
 # Simple Test #
 ###############
 result = subtract_offset(testvector, offset)
 result_opencl = outputvector
+
+end = 1
