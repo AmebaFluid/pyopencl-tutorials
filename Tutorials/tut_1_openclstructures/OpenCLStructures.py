@@ -55,6 +55,8 @@ except:
 r_count_A = contextA.get_info(cl.context_info.REFERENCE_COUNT)
 
 
+# -> The tutorial continues with contextA and the devices of the first platform.
+
 ###################
 # Kernel Function #
 ###################
@@ -72,6 +74,11 @@ def subtract_offset(vector, offset):
     else:
         print("The subtract_offset method works only for one-dimensional arrays.")
 
+# The inner execution of the for-loop, in this case the subtraction of an offset value, is called a work-item.
+# One individual execution inside the loop corresponds to one work-item.
+# In contrast the kernel is a collection of execution tasks, which often contains multiple work-items.
+# One individual execution is defined in the kernel function:
+
 kernelstringA = """__kernel void exampleKernelFunction(global int* inputdata, global int* outputdata){
 
      int loopindex = get_global_id(0);
@@ -80,6 +87,10 @@ kernelstringA = """__kernel void exampleKernelFunction(global int* inputdata, gl
 
 }"""
 
+# The global_id(0) matches the loop-index. If nested loops should be processed in parallel, global_id(0) corresponds
+# to the first loop-index whereas global_id(1) corresponds to the second and so forth.
+
+# The kernel function can be written to an external file including the .cl ending:
 filename = 'exampleKernelFunction.cl'
 file = open(filename, 'r')
 kernelstringB = "".join(file.readlines())
@@ -90,6 +101,8 @@ kernelstringB = "".join(file.readlines())
 ###########
 
 # The kernel function is build by an OpenCL-program, that can contain multiple kernels.
+# In this tutorial a program is used only for one kernel function.
+# Both ways of kernel-definition (inline or external file) are build by a program structure:
 
 programA = cl.Program(contextA, kernelstringA).build()
 programB = cl.Program(contextA, kernelstringB).build()
@@ -109,6 +122,7 @@ queueA = cl.CommandQueue(contextA, device=contextA.devices[0], properties=cl.com
 inputbuffer = cl.Buffer(contextA, cl.mem_flags.READ_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=testvector)
 outputbuffer = cl.Buffer(contextA, cl.mem_flags.WRITE_ONLY | cl.mem_flags.COPY_HOST_PTR, hostbuf=outputvector)
 
+
 #########################
 # Kernel Execution Time #
 #########################
@@ -123,6 +137,7 @@ event1_submitted = event1.profile.SUBMIT
 event1_execution_start = event1.profile.START
 event1_execution_end = event1.profile.END
 event1_execution_time = event1_execution_end - event1_execution_start
+
 
 ###############
 # Simple Test #
