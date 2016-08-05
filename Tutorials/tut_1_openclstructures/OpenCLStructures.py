@@ -127,7 +127,6 @@ outputbuffer = cl.Buffer(contextA, cl.mem_flags.WRITE_ONLY | cl.mem_flags.COPY_H
 # Kernel Execution Time #
 #########################
 
-# Every time you use program.kernel_name a new kernel object is produced.
 event1 = programA.exampleKernelFunction(queueA, testvector.shape, None, inputbuffer, outputbuffer)
 events = [event1]
 cl.enqueue_copy(queueA, outputvector, outputbuffer, wait_for=events)
@@ -138,6 +137,10 @@ event1_execution_start = event1.profile.START
 event1_execution_end = event1.profile.END
 event1_execution_time = event1_execution_end - event1_execution_start
 
+# Every time you use program.kernel_name a new kernel object is produced.
+example_kernel = programA.exampleKernelFunction
+example_kernel.set_args(inputbuffer, outputbuffer)
+event2 = cl.enqueue_nd_range_kernel(queueA, example_kernel, testvector.shape, None)
 
 ###############
 # Simple Test #
